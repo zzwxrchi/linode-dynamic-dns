@@ -3,8 +3,7 @@ Description=Linode Dynamic DNS
 After=network.target auditd.service
 
 [Service]
-#ExecStart=/usr/local/bin/linode-dynamic-dns
-ExecStart=/home/ma/.local/bin/linode-dynamic-dns
+ExecStart=/usr/local/bin/linode-dynamic-dns
 EnvironmentFile=/etc/linode-dynamic-dns.conf
 Type=oneshot
 DynamicUser=yes
