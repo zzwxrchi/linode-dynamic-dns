@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.request
 
-__version__ = '0.6.2'
+__version__ = '0.6.3'
 
 LOGGER = logging.getLogger(__package__)
 
