@@ -91,24 +91,28 @@ def update_dns(api, domain, host):
         sys.exit(1)
 
     # TODO: Delete invalid records and duplicates
-    for record in api.get_domain_records(domain_id):
-        if record['name'] == host:
-            local_ip = None
-            record_type = record['type']
-            if record_type == 'A':
-                local_ip = get_ip(4)
-            elif record_type == 'AAAA':
-                local_ip = get_ip(6)
+    # Make host list
+    hosts = host.split(",")
 
-            record_ip = ipaddress.ip_address(record['target'])
-            LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}"')
-            if local_ip and local_ip != record_ip:
-                log_suffix = (f'IPv{local_ip.version} '
-                              f'"{record_ip}" to "{local_ip}"')
-                LOGGER.info(f'Attempting update of {log_suffix}')
-                api.update_domain_record_target(
-                    domain_id, record['id'], local_ip)
-                LOGGER.info(f'Successful update of {log_suffix}')
+    for record in api.get_domain_records(domain_id):
+        for h in hosts:
+            if record['name'] == h.strip():
+                local_ip = None
+                record_type = record['type']
+                if record_type == 'A':
+                    local_ip = get_ip(4)
+                elif record_type == 'AAAA':
+                    local_ip = get_ip(6)
+
+                record_ip = ipaddress.ip_address(record['target'])
+                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}"')
+                if local_ip and local_ip != record_ip:
+                    log_suffix = (f'IPv{local_ip.version} '
+                                  f'"{record_ip}" to "{local_ip}"')
+                    LOGGER.info(f'Attempting update of {log_suffix}')
+                    api.update_domain_record_target(
+                        domain_id, record['id'], local_ip)
+                    LOGGER.info(f'Successful update of {log_suffix}')
 
 
 def main():
