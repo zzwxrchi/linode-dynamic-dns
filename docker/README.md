@@ -4,7 +4,7 @@ Update Linode DNS records with your local IPv4 and IPv6 addresses.
 
 **Required**
 - ``DOMAIN`` - Domain name
-- ``HOST`` - Host name (aka subdomain)
+- ``HOST`` - Host name(s) (subdomain) - name1[,name2,name3...]
 - ``TOKEN`` - Linode API token
 
 **Optional**
