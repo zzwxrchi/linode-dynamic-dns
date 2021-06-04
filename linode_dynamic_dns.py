@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.request
 
-__version__ = '0.6.3'
+__version__ = '0.6.4'
 
 LOGGER = logging.getLogger(__package__)
 
@@ -63,13 +63,34 @@ class LinodeAPI:
         if status != 200:
             raise http.client.HTTPException(f'status {status}')
 
+    # create host record if not exist
+    def create_domain_host_record(self, domain_id, host, recordType, target):
+        status, _ = self.request(
+            'POST',
+            f'domains/{domain_id}/records',
+            json={'name':str(host),
+                'type':str(recordType),
+                'target':str(target)}
+        )
+        if status != 200:
+            raise http.client.HTTPException(f'status {status}')
+
 
 def get_ip(version):
     url = IP_URLS[version]
-    with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
-        if response.status >= 400:
-            raise http.client.HTTPException(f'status {response.status}')
-        content = response.read()
+    LOGGER.info(f'url of IPv{version} is: {url}')
+
+    try:
+        response = urllib.request.urlopen(url, timeout=TIMEOUT)
+    except (OSError, urllib.error.URLError):
+        LOGGER.info(f'http error in get_ip({version})')
+        return None
+        
+#    with urllib.request.urlopen(url, timeout=TIMEOUT) as response:
+#        if response.status >= 400:
+#            raise http.client.HTTPException(f'status {response.status}')
+
+    content = response.read()
     ip = ipaddress.ip_address(content.decode().strip())
     if ip and ip.version == version:
         LOGGER.info(f'Local IPv{version} "{ip}"')
@@ -94,9 +115,13 @@ def update_dns(api, domain, host):
     # Make host list
     hosts = host.split(",")
 
-    for record in api.get_domain_records(domain_id):
-        for h in hosts:
+    for h in hosts:
+        # if host name (subdomain) don't created in linode
+        found = False
+
+        for record in api.get_domain_records(domain_id):
             if record['name'] == h.strip():
+                found = True # host name created
                 local_ip = None
                 record_type = record['type']
                 if record_type == 'A':
@@ -105,7 +130,7 @@ def update_dns(api, domain, host):
                     local_ip = get_ip(6)
 
                 record_ip = ipaddress.ip_address(record['target'])
-                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}"')
+                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" to host: {h}')
                 if local_ip and local_ip != record_ip:
                     log_suffix = (f'IPv{local_ip.version} '
                                   f'"{record_ip}" to "{local_ip}"')
@@ -114,6 +139,26 @@ def update_dns(api, domain, host):
                         domain_id, record['id'], local_ip)
                     LOGGER.info(f'Successful update of {log_suffix}')
 
+        LOGGER.info(f'Host {h} found: {found}')
+        if not found:
+            LOGGER.info(f'Create new host record')
+            # create host name record in linode
+            local_ip4 = get_ip(4)
+
+            if local_ip4:
+                log_suffix = (f'Add new host A record with target {local_ip4}')
+                LOGGER.info(f'Attempting: {log_suffix}')
+                api.create_domain_host_record(
+                    domain_id, h, "A", local_ip4)
+                LOGGER.info(f'Successfu: {log_suffix}')
+            
+            local_ip6 = get_ip(6)
+            if local_ip6:
+                log_suffix = (f'Add new host AAAA record with target {local_ip6}')
+                LOGGER.info(f'Attempting: {log_suffix}')
+                api.create_domain_host_record(
+                    domain_id, h, "AAAA", local_ip6)
+                LOGGER.info(f'Successfu: {log_suffix}')
 
 def main():
     parser = argparse.ArgumentParser('linode-dynamic-dns')

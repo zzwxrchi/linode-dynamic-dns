@@ -1,0 +1,16 @@
+Build and install app
+	https://dzone.com/articles/executable-package-pip-install
+	
+	Build:
+		cd to source folder
+		python3 setup.py bdist_wheel
+
+	Install:
+		# user sudo to install to /usr/local/bin/ and /usr/local/lib/
+		sudo python3 -m pip install dist/linode-dynamic-dns.whl
+			
+		# if install without sudo or root
+		# will install to  ~/.local/bin/ and ~/.local/lib/
+
+Host
+	Set new hosts or existed hosts in /etc/linode-dynamic-dns.conf
