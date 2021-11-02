@@ -7,10 +7,15 @@ Build and install app
 
 	Install:
 		# user sudo to install to /usr/local/bin/ and /usr/local/lib/
-		sudo python3 -m pip install dist/linode-dynamic-dns.whl
+		sudo python3 -m pip install linode_dynamic_dns-0.6.2-py3-none-any.whl
 			
 		# if install without sudo or root
 		# will install to  ~/.local/bin/ and ~/.local/lib/
 
 Host
 	Set new hosts or existed hosts in /etc/linode-dynamic-dns.conf
+    Example:
+            DOMAIN=example.com
+            HOST=@,www,mail
+    
+    Than can set ip to example.com, www.example.com and mail.example.com
