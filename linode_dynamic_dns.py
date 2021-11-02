@@ -9,7 +9,7 @@ import sys
 import time
 import urllib.request
 
-__version__ = '0.6.4'
+__version__ = '0.6.5'
 
 LOGGER = logging.getLogger(__package__)
 
@@ -114,36 +114,42 @@ def update_dns(api, domain, host):
     # TODO: Delete invalid records and duplicates
     # Make host list
     hosts = host.split(",")
+    local_ip4 = get_ip(4)
+    local_ip6 = get_ip(6)
 
     for h in hosts:
         # if host name (subdomain) don't created in linode
         found = False
 
         for record in api.get_domain_records(domain_id):
-            if record['name'] == h.strip():
+            LOGGER.info(f'Record name: {record["name"]}')
+
+            if record['name'] == h.strip() or (record['name'] == '' and h.strip() == '@'):
                 found = True # host name created
-                local_ip = None
-                record_type = record['type']
-                if record_type == 'A':
-                    local_ip = get_ip(4)
-                elif record_type == 'AAAA':
-                    local_ip = get_ip(6)
+                LOGGER.info(f'Seted host: {h} found: {found}, with remote record: {record["name"]}')
+
+                if  record['type'] == 'A':
+                    local_ip = local_ip4
+
+                elif  record['type'] == 'AAAA':
+                    local_ip = local_ip6
 
                 record_ip = ipaddress.ip_address(record['target'])
-                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" to host: {h}')
+                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" target to host: {h}')
+
                 if local_ip and local_ip != record_ip:
                     log_suffix = (f'IPv{local_ip.version} '
-                                  f'"{record_ip}" to "{local_ip}"')
+                                  f'"{record_ip}" change to "{local_ip}"')
                     LOGGER.info(f'Attempting update of {log_suffix}')
                     api.update_domain_record_target(
                         domain_id, record['id'], local_ip)
                     LOGGER.info(f'Successful update of {log_suffix}')
 
-        LOGGER.info(f'Host {h} found: {found}')
-        if not found:
+                break
+
+        if not found and h.strip() != '' and h.strip() != '@':
             LOGGER.info(f'Create new host record')
             # create host name record in linode
-            local_ip4 = get_ip(4)
 
             if local_ip4:
                 log_suffix = (f'Add new host A record with target {local_ip4}')
@@ -152,7 +158,6 @@ def update_dns(api, domain, host):
                     domain_id, h, "A", local_ip4)
                 LOGGER.info(f'Successfu: {log_suffix}')
             
-            local_ip6 = get_ip(6)
             if local_ip6:
                 log_suffix = (f'Add new host AAAA record with target {local_ip6}')
                 LOGGER.info(f'Attempting: {log_suffix}')
