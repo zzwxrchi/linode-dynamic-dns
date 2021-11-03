@@ -7,7 +7,7 @@ Build and install app
 
 	Install:
 		# user sudo to install to /usr/local/bin/ and /usr/local/lib/
-		sudo python3 -m pip install linode_dynamic_dns-0.6.2-py3-none-any.whl
+		sudo python3 -m pip install dist/linode_dynamic_dns-VERSION-py3-none-any.whl
 			
 		# if install without sudo or root
 		# will install to  ~/.local/bin/ and ~/.local/lib/

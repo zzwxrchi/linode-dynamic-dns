@@ -124,15 +124,16 @@ def update_dns(api, domain, host):
         for record in api.get_domain_records(domain_id):
             LOGGER.info(f'Record name: {record["name"]}')
 
-            if record['name'] == h.strip() or (record['name'] == '' and h.strip() == '@'):
+            if record['type'] == 'A':
+                local_ip = local_ip4
+            elif record['type'] == 'AAAA':
+                local_ip = local_ip6
+            else:
+                local_ip = None
+
+            if local_ip and record['name'] == h.strip() or (record['name'] == '' and h.strip() == '@'):
                 found = True # host name created
                 LOGGER.info(f'Seted host: {h} found: {found}, with remote record: {record["name"]}')
-
-                if  record['type'] == 'A':
-                    local_ip = local_ip4
-
-                elif  record['type'] == 'AAAA':
-                    local_ip = local_ip6
 
                 record_ip = ipaddress.ip_address(record['target'])
                 LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" target to host: {h}')
