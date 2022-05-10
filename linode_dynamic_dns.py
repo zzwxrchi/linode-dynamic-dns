@@ -112,6 +112,8 @@ def update_dns(api, domain, host):
         sys.exit(1)
 
     # TODO: Delete invalid records and duplicates
+    # ....
+
     # Make host list
     hosts = host.split(",")
     local_ip4 = get_ip(4)
@@ -131,22 +133,23 @@ def update_dns(api, domain, host):
             else:
                 local_ip = None
 
-            if local_ip and record['name'] == h.strip() or (record['name'] == '' and h.strip() == '@'):
-                found = True # host name created
-                LOGGER.info(f'Seted host: {h} found: {found}, with remote record: {record["name"]}')
+            if local_ip:
+                if record['name'] == h.strip() or (record['name'] == '' and h.strip() == '@'):
+                    found = True # host name created
+                    LOGGER.info(f'Set host: {h} found: {found}, with remote record: {record["name"]}')
 
-                record_ip = ipaddress.ip_address(record['target'])
-                LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" target to host: {h}')
+                    record_ip = ipaddress.ip_address(record['target'])
+                    LOGGER.info(f'Remote IPv{record_ip.version} "{record_ip}" target to host: {h}')
 
-                if local_ip and local_ip != record_ip:
-                    log_suffix = (f'IPv{local_ip.version} '
-                                  f'"{record_ip}" change to "{local_ip}"')
-                    LOGGER.info(f'Attempting update of {log_suffix}')
-                    api.update_domain_record_target(
-                        domain_id, record['id'], local_ip)
-                    LOGGER.info(f'Successful update of {log_suffix}')
+                    if local_ip != record_ip:
+                        log_suffix = (f'IPv{local_ip.version} '
+                                      f'"{record_ip}" change to "{local_ip}"')
+                        LOGGER.info(f'Attempting update of {log_suffix}')
+                        api.update_domain_record_target(
+                            domain_id, record['id'], local_ip)
+                        LOGGER.info(f'Successful update of {log_suffix}')
 
-                break
+                    break
 
         if not found and h.strip() != '' and h.strip() != '@':
             LOGGER.info(f'Create new host record')
