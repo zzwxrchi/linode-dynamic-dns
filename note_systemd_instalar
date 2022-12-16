@@ -1,8 +1,9 @@
-Build and install app
-	https://dzone.com/articles/executable-package-pip-install
-	
+https://github.com/zzwxrchi/linode-dynamic-dns
+https://github.com/zzwxrchi/linode-dynamic-dns/blob/master/note_systemd_instalar
 	Build:
-		cd to source folder
+		cd to git folder
+		sudo apt-get install python3-setuptools
+		sudo apt install pip
 		python3 setup.py bdist_wheel
 
 	Install:
@@ -12,10 +13,19 @@ Build and install app
 		# if install without sudo or root
 		# will install to  ~/.local/bin/ and ~/.local/lib/
 
-Host
-	Set new hosts or existed hosts in /etc/linode-dynamic-dns.conf
-    Example:
-            DOMAIN=example.com
-            HOST=@,www,mail
-    
-    Than can set ip to example.com, www.example.com and mail.example.com
+	Config:
+		sudo cp systemd/linode-dynamic-dns.service /etc/systemd/system/
+		sudo cp systemd/linode-dynamic-dns.timer /etc/systemd/system/
+		sudo cp systemd/linode-dynamic-dns.conf /etc/
+
+		sudo vim /etc/linode-dynamic-dns.conf
+			# Example:
+			HOST=@,abc,xyz		#->  @=naked domain.
+			DOMAIN=domain.com
+			TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+	Enable:
+		sudo systemctl daemon-reload
+		sudo systemctl enable linode-dynamic-dns.timer
+		sudo systemctl start linode-dynamic-dns.timer
+		sudo systemctl start linode-dynamic-dns.service	
